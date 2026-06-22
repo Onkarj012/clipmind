@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run unit tests
+        run: >-
+          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          -configuration Debug -destination 'platform=macOS,arch=arm64' test
+      - name: Build unsigned release artifact
+        run: >-
+          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          -configuration Release -destination 'platform=macOS,arch=arm64'
+          CODE_SIGNING_ALLOWED=NO build

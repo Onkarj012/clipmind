@@ -396,7 +396,7 @@ final class ClipboardRepositoryTests: XCTestCase {
     }
 
     func testInsertImageCreatesAssetAndThumbnail() throws {
-        let pngData = Self.makeTestPNGData(width: 120, height: 90)
+        let pngData = try Self.makeTestPNGData(width: 120, height: 90)
         let item = try repository.insertImage(
             ClipboardImageInsertInput(
                 imageData: pngData,
@@ -420,7 +420,7 @@ final class ClipboardRepositoryTests: XCTestCase {
     }
 
     func testInsertImageDedupIncrementsCopyCount() throws {
-        let pngData = Self.makeTestPNGData(width: 64, height: 64)
+        let pngData = try Self.makeTestPNGData(width: 64, height: 64)
         let first = try repository.insertImage(
             ClipboardImageInsertInput(
                 imageData: pngData,
@@ -449,7 +449,7 @@ final class ClipboardRepositoryTests: XCTestCase {
         )
         let image = try repository.insertImage(
             ClipboardImageInsertInput(
-                imageData: Self.makeTestPNGData(width: 40, height: 40),
+                imageData: try Self.makeTestPNGData(width: 40, height: 40),
                 format: .png,
                 sourceApp: "Preview",
                 sourceBundleId: "com.apple.Preview"
@@ -465,7 +465,7 @@ final class ClipboardRepositoryTests: XCTestCase {
     func testSearchFindsImageBySourceApp() throws {
         _ = try repository.insertImage(
             ClipboardImageInsertInput(
-                imageData: Self.makeTestPNGData(width: 50, height: 50),
+                imageData: try Self.makeTestPNGData(width: 50, height: 50),
                 format: .png,
                 sourceApp: "Preview",
                 sourceBundleId: "com.apple.Preview"
@@ -571,7 +571,7 @@ final class ClipboardRepositoryTests: XCTestCase {
         XCTAssertEqual(files[0].fileDisplayName, "readme.md")
     }
 
-    private static func makeTestPNGData(width: Int, height: Int) -> Data {
+    private static func makeTestPNGData(width: Int, height: Int) throws -> Data {
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         guard let context = CGContext(
             data: nil,
@@ -582,24 +582,27 @@ final class ClipboardRepositoryTests: XCTestCase {
             space: colorSpace,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else {
-            XCTFail("Failed to create test image context")
-            return Data()
+            throw TestImageError.contextCreationFailed
         }
 
         context.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
         context.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
         guard let cgImage = context.makeImage() else {
-            XCTFail("Failed to create test CGImage")
-            return Data()
+            throw TestImageError.imageCreationFailed
         }
 
         let rep = NSBitmapImageRep(cgImage: cgImage)
         guard let png = rep.representation(using: .png, properties: [:]) else {
-            XCTFail("Failed to create test PNG data")
-            return Data()
+            throw TestImageError.pngEncodingFailed
         }
         return png
+    }
+
+    private enum TestImageError: Error {
+        case contextCreationFailed
+        case imageCreationFailed
+        case pngEncodingFailed
     }
 }
 

@@ -7,12 +7,10 @@ struct PasteboardExtractedText: Sendable {
 
 enum PasteboardTextExtractor {
     static func extract(from pasteboard: NSPasteboard) -> PasteboardExtractedText? {
-        var metadata: [String: String] = [:]
         var plainText = pasteboard.string(forType: .string)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         if let rtfData = pasteboard.data(forType: .rtf) {
-            metadata["rich_rtf"] = rtfData.base64EncodedString()
             if plainText.isEmpty,
                let attributed = try? NSAttributedString(
                    data: rtfData,
@@ -25,7 +23,6 @@ enum PasteboardTextExtractor {
         }
 
         if let htmlData = pasteboard.data(forType: .html) {
-            metadata["rich_html"] = htmlData.base64EncodedString()
             if plainText.isEmpty,
                let attributed = try? NSAttributedString(
                    data: htmlData,
@@ -41,6 +38,6 @@ enum PasteboardTextExtractor {
             return nil
         }
 
-        return PasteboardExtractedText(plainText: plainText, metadata: metadata)
+        return PasteboardExtractedText(plainText: plainText, metadata: [:])
     }
 }

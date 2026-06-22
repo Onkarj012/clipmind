@@ -3,6 +3,7 @@ import Foundation
 enum OllamaEmbeddingError: Error, Equatable {
     case invalidURL
     case invalidResponse
+    case nonLoopbackURL
     case httpError(statusCode: Int)
     case emptyEmbedding
 }
@@ -19,6 +20,9 @@ struct OllamaEmbeddingProvider: Sendable {
     }
 
     func embed(text: String) async throws -> [Float] {
+        guard let host = baseURL.host?.lowercased(), OllamaEndpointPolicy.isLoopback(host: host) else {
+            throw OllamaEmbeddingError.nonLoopbackURL
+        }
         guard let url = URL(string: "api/embeddings", relativeTo: baseURL) else {
             throw OllamaEmbeddingError.invalidURL
         }

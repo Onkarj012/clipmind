@@ -9,8 +9,6 @@ struct MenuBarView: View {
             Button("Open Library") {
                 openLibrary()
             }
-            .keyboardShortcut("l", modifiers: [.command, .shift])
-
             Button(appModel.isTrackingPaused ? "Resume Tracking" : "Pause Tracking") {
                 appModel.toggleTrackingPause()
             }

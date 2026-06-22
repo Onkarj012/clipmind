@@ -3,6 +3,7 @@ import Foundation
 
 enum AssetStoreError: Error, Equatable {
     case invalidImageData
+    case invalidItemID
     case failedToWriteThumbnail
 }
 
@@ -47,6 +48,9 @@ enum AssetStore {
     ) throws -> SavedImageAsset {
         guard let image = NSImage(data: data) else {
             throw AssetStoreError.invalidImageData
+        }
+        guard UUID(uuidString: itemID) != nil else {
+            throw AssetStoreError.invalidItemID
         }
 
         let pixelSize = pixelDimensions(of: image)

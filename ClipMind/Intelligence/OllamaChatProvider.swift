@@ -3,6 +3,7 @@ import Foundation
 enum OllamaChatError: Error, Equatable {
     case invalidURL
     case invalidResponse
+    case nonLoopbackURL
     case httpError(statusCode: Int)
     case emptyResponse
 }
@@ -19,6 +20,9 @@ struct OllamaChatProvider: LLMProvider, Sendable {
     }
 
     func complete(prompt: String) async throws -> String {
+        guard let host = baseURL.host?.lowercased(), OllamaEndpointPolicy.isLoopback(host: host) else {
+            throw OllamaChatError.nonLoopbackURL
+        }
         guard let url = URL(string: "api/generate", relativeTo: baseURL) else {
             throw OllamaChatError.invalidURL
         }

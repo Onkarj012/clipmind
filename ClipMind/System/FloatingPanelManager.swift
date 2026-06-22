@@ -17,11 +17,10 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
         size: CGSize,
         onClose: @escaping () -> Void
     ) {
-        self.onClose = onClose
-
         if let panel, panel.isVisible {
-            panel.close()
+            hide()
         }
+        self.onClose = onClose
 
         let root = AnyView(content)
         let controller = NSHostingController(rootView: root)

@@ -78,10 +78,11 @@ final class OCRTests: XCTestCase {
 
         let indexer = OCRIndexer(repository: repository)
         indexer.settingsProvider = { OCRSettings(isEnabled: false) }
-        indexer.ocrTextProvider = { _ in "should-not-run" }
+        indexer.ocrTextProvider = { _ in
+            XCTFail("OCR should not run when disabled")
+            return "should-not-run"
+        }
         indexer.enqueue(item: try XCTUnwrap(try repository.fetch(id: item.id)))
-
-        Thread.sleep(forTimeInterval: 0.2)
 
         let asset = try XCTUnwrap(try repository.fetchAsset(for: item.id))
         XCTAssertNil(asset.ocrText)

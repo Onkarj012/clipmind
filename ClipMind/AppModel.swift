@@ -42,6 +42,7 @@ final class AppModel: ObservableObject {
     private var paletteShortcutMonitor: Any?
     private var openLibraryHandler: (() -> Void)?
     private var cancellables = Set<AnyCancellable>()
+    private var semanticSearchTask: Task<Void, Never>?
     private let semanticSettingsStore: SemanticSearchSettingsStore
     private let metadataSettingsStore: AIMetadataSettingsStore
     private let ocrSettingsStore: OCRSettingsStore
@@ -421,6 +422,8 @@ final class AppModel: ObservableObject {
         limit: Int,
         assign: @escaping ([ClipboardItem]) -> Void
     ) {
+        semanticSearchTask?.cancel()
+        semanticSearchTask = nil
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedQuery.isEmpty {
             do {
@@ -436,23 +439,25 @@ final class AppModel: ObservableObject {
 
         if shouldUseSemantic {
             let embeddingModel = semanticSettingsStore.current().embeddingModelIdentifier
-            Task {
+            semanticSearchTask = Task { [weak self] in
+                guard let self else { return }
                 do {
                     let embedding = try await embeddingIndexer.embedQuery(parsed.keywords)
+                    guard !Task.isCancelled else { return }
                     let results = try repository.search(
                         trimmedQuery,
                         limit: limit,
                         queryEmbedding: embedding,
                         embeddingModel: embeddingModel
                     )
-                    await MainActor.run {
-                        assign(results)
-                    }
+                    guard !Task.isCancelled else { return }
+                    assign(results)
+                } catch is CancellationError {
+                    return
                 } catch {
+                    guard !Task.isCancelled else { return }
                     NSLog("ClipMind: semantic search failed, falling back to FTS: \(error.localizedDescription)")
-                    await MainActor.run {
-                        self.fallbackSearch(query: trimmedQuery, limit: limit, assign: assign)
-                    }
+                    fallbackSearch(query: trimmedQuery, limit: limit, assign: assign)
                 }
             }
         } else {

@@ -37,7 +37,7 @@ enum OllamaEndpointPolicy {
         return url
     }
 
-    private static func isLoopback(host: String) -> Bool {
+    static func isLoopback(host: String) -> Bool {
         host == "localhost" || host == "127.0.0.1" || host == "::1"
     }
 }

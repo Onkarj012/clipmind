@@ -38,7 +38,7 @@ struct LibraryView: View {
         }
         .alert("Accessibility Required", isPresented: $appModel.showLibraryAccessibilityAlert) {
             Button("Open System Settings") {
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                if let url = URL(string: "x-apple.systemsettings:com.apple.preference.security?Privacy_Accessibility") {
                     NSWorkspace.shared.open(url)
                 }
             }

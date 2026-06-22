@@ -54,7 +54,8 @@ enum AIActionService {
         guard !result.isEmpty else { throw AIActionError.providerUnavailable }
 
         if action == .formatJSON {
-            guard isValidJSON(result) else { throw AIActionError.invalidJSONOutput }
+            guard let json = normalizedJSON(result) else { throw AIActionError.invalidJSONOutput }
+            return json
         }
 
         return result
@@ -111,17 +112,28 @@ enum AIActionService {
     }
 
     static func isValidJSON(_ text: String) -> Bool {
-        let candidate = extractJSON(from: text)
-        guard let data = candidate.data(using: .utf8) else { return false }
-        return (try? JSONSerialization.jsonObject(with: data)) != nil
+        normalizedJSON(text) != nil
     }
 
-    private static func extractJSON(from text: String) -> String {
-        if let start = text.firstIndex(of: "{") ?? text.firstIndex(of: "["),
-           let end = text.lastIndex(of: "}") ?? text.lastIndex(of: "]")
-        {
-            return String(text[start...end])
+    private static func normalizedJSON(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidates = [trimmed, extractDelimitedJSON(from: trimmed)].compactMap { $0 }
+        for candidate in candidates {
+            guard let data = candidate.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data),
+                  JSONSerialization.isValidJSONObject(object),
+                  let normalized = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
+                  let string = String(data: normalized, encoding: .utf8)
+            else { continue }
+            return string
         }
-        return text
+        return nil
+    }
+
+    private static func extractDelimitedJSON(from text: String) -> String? {
+        guard let start = text.firstIndex(where: { $0 == "{" || $0 == "[" }) else { return nil }
+        let closing: Character = text[start] == "{" ? "}" : "]"
+        guard let end = text[start...].lastIndex(of: closing) else { return nil }
+        return String(text[start...end])
     }
 }

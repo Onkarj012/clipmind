@@ -79,6 +79,20 @@ final class AIMetadataServiceTests: XCTestCase {
 }
 
 final class LLMProviderChainTests: XCTestCase {
+    func testOllamaProviderRejectsRemoteEndpointBeforeSendingContent() async {
+        let provider = OllamaChatProvider(
+            baseURL: URL(string: "https://example.com")!,
+            model: "test"
+        )
+
+        do {
+            _ = try await provider.complete(prompt: "clipboard content")
+            XCTFail("Expected local endpoint validation error")
+        } catch {
+            XCTAssertEqual(error as? OllamaChatError, .nonLoopbackURL)
+        }
+    }
+
     func testChainPrefersFirstProvider() async throws {
         struct RecordingProvider: LLMProvider {
             let name: String

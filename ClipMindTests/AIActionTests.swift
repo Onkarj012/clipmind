@@ -42,6 +42,22 @@ final class AIActionServiceTests: XCTestCase {
         }
     }
 
+    func testFormatJSONStripsMarkdownFencesAndReturnsNormalizedJSON() async throws {
+        struct FakeProvider: LLMProvider {
+            func complete(prompt: String) async throws -> String {
+                "```json\n{\"enabled\":true,\"name\":\"ClipMind\"}\n```"
+            }
+        }
+
+        let result = try await AIActionService.run(
+            action: .formatJSON,
+            text: "{name: ClipMind}",
+            provider: FakeProvider()
+        )
+
+        XCTAssertEqual(result, "{\n  \"enabled\" : true,\n  \"name\" : \"ClipMind\"\n}")
+    }
+
     func testSummarizeReturnsProviderText() async throws {
         struct FakeProvider: LLMProvider {
             func complete(prompt: String) async throws -> String {

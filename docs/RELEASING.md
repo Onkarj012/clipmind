@@ -13,9 +13,11 @@ not use the App Sandbox.
 
 ## Release checklist
 
-1. Bump `CFBundleShortVersionString` and `CFBundleVersion` in
-   `ClipMind/Info.plist`.
-2. Run the unit suite:
+1. Merge through a PR with CI passing. After the `CI` workflow succeeds on
+   `main`, the `Version` workflow automatically bumps the patch version,
+   commits `ClipMind/Info.plist`, and creates a matching `vX.Y.Z` tag.
+   Use the workflow's manual dispatch when a `minor` or `major` bump is needed.
+2. Run the unit suite locally before cutting a signed artifact:
 
    ```sh
    xcodebuild -project ClipMind.xcodeproj -scheme ClipMind -configuration Debug -destination 'platform=macOS,arch=arm64' test

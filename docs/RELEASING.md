@@ -13,17 +13,20 @@ not use the App Sandbox.
 
 ## Release checklist
 
-1. Bump `CFBundleShortVersionString` and `CFBundleVersion` in
-   `ClipMind/Info.plist`.
-2. Run the unit suite:
+1. Merge through a PR with CI passing.
+2. Run the manual `Release` workflow from `main` and choose `patch`, `minor`,
+   or `major`. The workflow bumps `ClipMind/Info.plist`, runs tests, builds a
+   Release app, commits `chore(release): vX.Y.Z`, creates an annotated tag, and
+   opens a draft GitHub Release with the unsigned CI artifact attached.
+3. Run the unit suite locally before cutting a signed artifact:
 
    ```sh
    xcodebuild -project ClipMind.xcodeproj -scheme ClipMind -configuration Debug -destination 'platform=macOS,arch=arm64' test
    ```
 
-3. Archive with the Developer ID identity and your team ID. The Release
+4. Archive with the Developer ID identity and your team ID. The Release
    configuration enables Hardened Runtime.
-4. Validate the exported application before upload:
+5. Validate the exported application before upload:
 
    ```sh
    codesign --verify --deep --strict --verbose=2 ClipMind.app
@@ -31,10 +34,10 @@ not use the App Sandbox.
    spctl -a -vv ClipMind.app
    ```
 
-5. Submit the signed archive with `xcrun notarytool submit ... --wait`, staple
+6. Submit the signed archive with `xcrun notarytool submit ... --wait`, staple
    the accepted ticket with `xcrun stapler staple ClipMind.app`, then repeat
    the validation command above.
-6. Test on a clean macOS user account: initial launch, Accessibility prompt,
+7. Test on a clean macOS user account: initial launch, Accessibility prompt,
    global shortcuts, capture/paste, local Ollama fallback, and history
    retention/deletion.
 

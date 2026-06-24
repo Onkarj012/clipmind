@@ -68,14 +68,22 @@ jobs:
           -derivedDataPath build/DerivedData
           CODE_SIGNING_ALLOWED=NO build
 
-      - name: Package unsigned app artifact
+      - name: Package unsigned DMG artifact
         env:
           VERSION: ${{ steps.bump.outputs.version }}
         run: |
           mkdir -p dist
-          ditto -c -k --keepParent \
-            "build/DerivedData/Build/Products/Release/ClipMind.app" \
-            "dist/ClipMind-${VERSION}-unsigned.zip"
+          dmg_root="build/dmg-root"
+          rm -rf "$dmg_root"
+          mkdir -p "$dmg_root"
+          ditto "build/DerivedData/Build/Products/Release/ClipMind.app" "$dmg_root/ClipMind.app"
+          ln -s /Applications "$dmg_root/Applications"
+          hdiutil create \
+            -volname "ClipMind ${VERSION}" \
+            -srcfolder "$dmg_root" \
+            -ov \
+            -format UDZO \
+            "dist/ClipMind-${VERSION}-unsigned.dmg"
 
       - name: Commit version and create tag
         env:
@@ -106,7 +114,7 @@ jobs:
         run: |
           tag="v${VERSION}"
           gh release create "$tag" \
-            "dist/ClipMind-${VERSION}-unsigned.zip" \
+            "dist/ClipMind-${VERSION}-unsigned.dmg" \
             --draft \
             --title "ClipMind ${tag}" \
-            --notes "Build ${BUILD}. Unsigned CI artifact; sign and notarize before public distribution."
+            --notes "Build ${BUILD}. Unsigned DMG artifact; sign and notarize before public distribution."

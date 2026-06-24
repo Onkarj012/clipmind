@@ -72,6 +72,7 @@
 		E7301445061879FE2ECE88EE /* SensitiveDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79199B9AC18626E8162B279 /* SensitiveDetector.swift */; };
 		EA451FE6E0427322F29A45CE /* ClipboardWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59727B7BB9B6FE23689DBEDB /* ClipboardWatcher.swift */; };
 		EBECA7EAFD71ED5BCDF12A19 /* KeychainSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1D65ADF7F809E8CEBB2A23 /* KeychainSecretsStore.swift */; };
+		EC5B4C5FDB04E1673BF67354 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3560C68BD085CD2833581928 /* Assets.xcassets */; };
 		F9E894DBD2ABE724743B3164 /* AIActionPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E81B39AEAB4D3D4894AC0B7 /* AIActionPreviewSheet.swift */; };
 		FB7F71F3D127851FFFBF7F19 /* ClipboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A38B0D61C5758A157E3D3AF0 /* ClipboardItem.swift */; };
 /* End PBXBuildFile section */
@@ -96,6 +97,7 @@
 		2B6F709B2E79000CEBF9B12F /* SemanticSearchSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticSearchSettings.swift; sourceTree = "<group>"; };
 		2C7FEB45FA10B8DC10B7E04E /* EmbeddingIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingIndexer.swift; sourceTree = "<group>"; };
 		2F91E56D51C52ED9DA35F719 /* ClipRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipRowView.swift; sourceTree = "<group>"; };
+		3560C68BD085CD2833581928 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		37A5DA875C8EF5455DD4BE93 /* ClipMindSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipMindSettings.swift; sourceTree = "<group>"; };
 		395EA700FC5F082CA9FB9DDB /* LLMProviderChain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProviderChain.swift; sourceTree = "<group>"; };
 		39A689E766C2EF45E8BFC0E1 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -263,6 +265,7 @@
 			isa = PBXGroup;
 			children = (
 				9C67A850604BB99F7C9B7C4C /* AppModel.swift */,
+				3560C68BD085CD2833581928 /* Assets.xcassets */,
 				6C29297BE543EA421E71504A /* ClipMind.entitlements */,
 				4A9599847CFFD5C568CC37C4 /* ClipMindApp.swift */,
 				5BD1381395184F1BCC925F05 /* Info.plist */,
@@ -335,6 +338,7 @@
 			buildConfigurationList = 04F892091D57076F46D3464C /* Build configuration list for PBXNativeTarget "ClipMind" */;
 			buildPhases = (
 				04D5ECBB726B71E914CE511E /* Sources */,
+				7E52DDDB78FA2298118D606C /* Resources */,
 				8C97BCD3EEDE63B50ED82E1E /* Frameworks */,
 			);
 			buildRules = (
@@ -394,6 +398,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7E52DDDB78FA2298118D606C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EC5B4C5FDB04E1673BF67354 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		04D5ECBB726B71E914CE511E /* Sources */ = {

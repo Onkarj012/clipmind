@@ -40,9 +40,11 @@ jobs:
 
       - name: Bump Info.plist version
         id: bump
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump }}
         run: >-
           python3 .github/scripts/bump_version.py
-          --bump "${{ github.event.inputs.bump }}"
+          --bump "${BUMP_TYPE}"
 
       - name: Verify tag is new
         env:

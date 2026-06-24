@@ -35,6 +35,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: ClipMind/ClipMind.entitlements
         GENERATE_INFOPLIST_FILE: NO
         PRODUCT_NAME: ClipMind
+      configs:
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
     dependencies:
       - package: GRDB
         product: GRDB

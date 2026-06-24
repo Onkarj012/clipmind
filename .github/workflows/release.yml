@@ -94,8 +94,7 @@ jobs:
           VERSION: ${{ steps.bump.outputs.version }}
         run: |
           tag="v${VERSION}"
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$tag"
+          git push --atomic "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main "$tag"
 
       - name: Create draft GitHub Release
         env:

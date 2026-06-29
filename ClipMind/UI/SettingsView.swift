@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
@@ -9,7 +10,7 @@ struct SettingsView: View {
     }
 }
 
-private struct SettingsForm: View {
+struct SettingsForm: View {
     @ObservedObject var settings: ClipMindSettings
     @EnvironmentObject private var appModel: AppModel
     @State private var showClearHistoryConfirmation = false
@@ -44,8 +45,21 @@ private struct SettingsForm: View {
                 Text("Oldest non-favorite clips are removed when limits are exceeded. Favorites and trashed items are not affected.")
             }
 
-            Section("Paste") {
+            Section {
+                Picker("On Enter", selection: $settings.pasteDirectlyFromPalette) {
+                    Text("Paste into active app").tag(true)
+                    Text("Copy to clipboard").tag(false)
+                }
                 Toggle("Keep palette open after paste", isOn: $settings.keepPaletteOpenAfterPaste)
+            } header: {
+                Text("Paste")
+            } footer: {
+                Text("Choose what pressing ↵ in the palette does. “Copy to clipboard” sets the clip as the latest entry so you can paste it yourself. ⌘C always copies without pasting.")
+            }
+
+            Section("Shortcuts") {
+                ShortcutSettingRow(title: "Quick Clipboard", name: .commandPalette)
+                ShortcutSettingRow(title: "Library", name: .openLibrary)
             }
 
             Section {
@@ -59,13 +73,17 @@ private struct SettingsForm: View {
                 .disabled(!settings.semanticSearchEnabled)
 
                 if settings.embeddingBackend == .ollama {
-                    TextField("Local Ollama URL", text: $settings.ollamaBaseURL)
-                        .textFieldStyle(.roundedBorder)
-                        .disabled(!settings.semanticSearchEnabled)
+                    LabeledContent("Local Ollama URL") {
+                        TextField("http://localhost:11434", text: $settings.ollamaBaseURL)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    .disabled(!settings.semanticSearchEnabled)
 
-                    TextField("Embedding model", text: $settings.ollamaEmbeddingModel)
-                        .textFieldStyle(.roundedBorder)
-                        .disabled(!settings.semanticSearchEnabled)
+                    LabeledContent("Embedding model") {
+                        TextField("model name", text: $settings.ollamaEmbeddingModel)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    .disabled(!settings.semanticSearchEnabled)
                 }
             } header: {
                 Text("Semantic Search")
@@ -76,29 +94,28 @@ private struct SettingsForm: View {
             Section {
                 Toggle("Enable AI metadata", isOn: $settings.aiMetadataEnabled)
 
-                HStack {
-                    Label(
-                        settings.hasGroqAPIKey ? "Groq configured" : "Groq API key missing",
-                        systemImage: settings.hasGroqAPIKey ? "checkmark.circle.fill" : "exclamationmark.circle"
-                    )
-                    .foregroundStyle(settings.hasGroqAPIKey ? .green : .secondary)
+                LabeledContent("Groq API key") {
+                    GroqAPIKeyField(settings: settings)
                 }
                 .disabled(!settings.aiMetadataEnabled)
 
-                GroqAPIKeyField(settings: settings)
-                    .disabled(!settings.aiMetadataEnabled)
+                LabeledContent("Groq model") {
+                    TextField("model name", text: $settings.groqModel)
+                        .multilineTextAlignment(.trailing)
+                }
+                .disabled(!settings.aiMetadataEnabled)
 
-                TextField("Groq model", text: $settings.groqModel)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!settings.aiMetadataEnabled)
+                LabeledContent("Ollama URL (fallback)") {
+                    TextField("http://localhost:11434", text: $settings.ollamaBaseURL)
+                        .multilineTextAlignment(.trailing)
+                }
+                .disabled(!settings.aiMetadataEnabled)
 
-                    TextField("Local Ollama URL (fallback)", text: $settings.ollamaBaseURL)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!settings.aiMetadataEnabled)
-
-                TextField("Ollama chat model (fallback)", text: $settings.ollamaChatModel)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!settings.aiMetadataEnabled)
+                LabeledContent("Ollama chat model (fallback)") {
+                    TextField("model name", text: $settings.ollamaChatModel)
+                        .multilineTextAlignment(.trailing)
+                }
+                .disabled(!settings.aiMetadataEnabled)
             } header: {
                 Text("AI Metadata")
             } footer: {
@@ -114,19 +131,17 @@ private struct SettingsForm: View {
             }
 
             Section {
-                HStack {
-                    Label(
-                        PasteController.isAccessibilityTrusted ? "Granted" : "Not granted",
-                        systemImage: PasteController.isAccessibilityTrusted ? "checkmark.circle.fill" : "xmark.circle.fill"
-                    )
-                    .foregroundStyle(PasteController.isAccessibilityTrusted ? .green : .orange)
-
-                    Spacer()
-
+                StatusRow(
+                    title: "Accessibility",
+                    isOK: PasteController.isAccessibilityTrusted,
+                    okText: "Granted",
+                    notOKText: "Not granted"
+                ) {
                     if !PasteController.isAccessibilityTrusted {
                         Button("Open System Settings") {
                             openAccessibilitySettings()
                         }
+                        .controlSize(.small)
                     }
                 }
             } header: {
@@ -146,7 +161,7 @@ private struct SettingsForm: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 420, minHeight: 460)
+        .frame(minWidth: 440, minHeight: 480)
         .navigationTitle("Settings")
         .confirmationDialog(
             "Clear History?",
@@ -181,34 +196,106 @@ private struct SettingsForm: View {
     }
 }
 
+/// A settings row that shows a shortcut as keycaps with an inline "Change" affordance
+/// that reveals the native recorder only while editing.
+private struct ShortcutSettingRow: View {
+    let title: String
+    let name: KeyboardShortcuts.Name
+    @State private var isEditing = false
+
+    var body: some View {
+        LabeledContent(title) {
+            if isEditing {
+                HStack(spacing: 8) {
+                    KeyboardShortcuts.Recorder(for: name)
+                    Button("Done") { isEditing = false }
+                        .controlSize(.small)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    ShortcutKeycapView(name: name)
+                    Button("Change") { isEditing = true }
+                        .controlSize(.small)
+                        .buttonStyle(.borderless)
+                }
+            }
+        }
+    }
+}
+
+/// A status row with a leading colored indicator and an optional trailing accessory,
+/// laid out so the indicator never stretches.
+private struct StatusRow<Accessory: View>: View {
+    let title: String
+    let isOK: Bool
+    let okText: String
+    let notOKText: String
+    @ViewBuilder var accessory: Accessory
+
+    var body: some View {
+        LabeledContent(title) {
+            HStack(spacing: 8) {
+                Label(isOK ? okText : notOKText, systemImage: isOK ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(isOK ? .green : .orange)
+                    .labelStyle(.titleAndIcon)
+                accessory
+            }
+        }
+    }
+}
+
 private struct GroqAPIKeyField: View {
     @ObservedObject var settings: ClipMindSettings
     @State private var draftKey = ""
+    @State private var originalKey = ""
+    @State private var isRevealed = false
     @State private var saveError: String?
 
+    private var isDirty: Bool { draftKey != originalKey }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            SecureField("Groq API key", text: $draftKey)
+        VStack(alignment: .trailing, spacing: 6) {
+            HStack(spacing: 6) {
+                Group {
+                    if isRevealed {
+                        TextField("sk-…", text: $draftKey)
+                    } else {
+                        SecureField("sk-…", text: $draftKey)
+                    }
+                }
                 .textFieldStyle(.roundedBorder)
+                .frame(minWidth: 200)
                 .onSubmit { saveKey() }
-                .onAppear {
-                    draftKey = settings.hasGroqAPIKey ? "••••••••" : ""
+
+                Button {
+                    isRevealed.toggle()
+                } label: {
+                    Image(systemName: isRevealed ? "eye.slash" : "eye")
+                }
+                .buttonStyle(.borderless)
+                .help(isRevealed ? "Hide key" : "Reveal key")
+            }
+
+            HStack(spacing: 8) {
+                if settings.hasGroqAPIKey {
+                    Label("Configured", systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                } else {
+                    Label("Not set", systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
-            HStack {
-                Button("Save Key") { saveKey() }
-                    .disabled(draftKey.isEmpty || draftKey == "••••••••")
+                Spacer(minLength: 12)
+
+                Button("Save") { saveKey() }
+                    .controlSize(.small)
+                    .disabled(!isDirty || draftKey.isEmpty)
 
                 if settings.hasGroqAPIKey {
-                    Button("Clear Key", role: .destructive) {
-                        do {
-                            try settings.clearGroqAPIKey()
-                            draftKey = ""
-                            saveError = nil
-                        } catch {
-                            saveError = error.localizedDescription
-                        }
-                    }
+                    Button("Clear", role: .destructive) { clearKey() }
+                        .controlSize(.small)
                 }
             }
 
@@ -218,13 +305,31 @@ private struct GroqAPIKeyField: View {
                     .foregroundStyle(.red)
             }
         }
+        .onAppear(perform: loadKey)
+    }
+
+    private func loadKey() {
+        let current = settings.revealGroqAPIKey() ?? ""
+        draftKey = current
+        originalKey = current
     }
 
     private func saveKey() {
-        guard draftKey != "••••••••" else { return }
         do {
             try settings.saveGroqAPIKey(draftKey)
-            draftKey = settings.hasGroqAPIKey ? "••••••••" : ""
+            originalKey = draftKey
+            saveError = nil
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    private func clearKey() {
+        do {
+            try settings.clearGroqAPIKey()
+            draftKey = ""
+            originalKey = ""
+            isRevealed = false
             saveError = nil
         } catch {
             saveError = error.localizedDescription

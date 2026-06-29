@@ -10,6 +10,7 @@ final class ClipMindSettings: ObservableObject {
         static let retentionMaxAgeDays = "retentionMaxAgeDays"
         static let retentionInfinite = "retentionInfinite"
         static let keepPaletteOpenAfterPaste = "keepPaletteOpenAfterPaste"
+        static let pasteDirectlyFromPalette = "pasteDirectlyFromPalette"
         static let semanticSearchEnabled = "semanticSearchEnabled"
         static let embeddingBackend = "embeddingBackend"
         static let ollamaBaseURL = "ollamaBaseURL"
@@ -46,6 +47,12 @@ final class ClipMindSettings: ObservableObject {
 
     @Published var keepPaletteOpenAfterPaste: Bool {
         didSet { defaults.set(keepPaletteOpenAfterPaste, forKey: Keys.keepPaletteOpenAfterPaste) }
+    }
+
+    /// When true, activating a clip in the palette pastes it into the active app.
+    /// When false, it only copies the clip to the clipboard for the user to paste later.
+    @Published var pasteDirectlyFromPalette: Bool {
+        didSet { defaults.set(pasteDirectlyFromPalette, forKey: Keys.pasteDirectlyFromPalette) }
     }
 
     @Published var semanticSearchEnabled: Bool {
@@ -123,6 +130,7 @@ final class ClipMindSettings: ObservableObject {
         self.retentionMaxAgeDays = defaults.object(forKey: Keys.retentionMaxAgeDays) as? Int ?? 30
         self.retentionInfinite = defaults.bool(forKey: Keys.retentionInfinite)
         self.keepPaletteOpenAfterPaste = defaults.bool(forKey: Keys.keepPaletteOpenAfterPaste)
+        self.pasteDirectlyFromPalette = defaults.object(forKey: Keys.pasteDirectlyFromPalette) as? Bool ?? true
         self.semanticSearchEnabled = defaults.object(forKey: Keys.semanticSearchEnabled) as? Bool ?? true
         if let rawBackend = defaults.string(forKey: Keys.embeddingBackend),
            let backend = EmbeddingBackend(rawValue: rawBackend)
@@ -154,6 +162,11 @@ final class ClipMindSettings: ObservableObject {
     func clearGroqAPIKey() throws {
         try secretsStore.delete(key: .groqAPIKey)
         hasGroqAPIKey = false
+    }
+
+    /// Reads the stored Groq API key back from the keychain so the UI can reveal it.
+    func revealGroqAPIKey() -> String? {
+        (try? secretsStore.read(key: .groqAPIKey)).flatMap { $0 }
     }
 
     func completeFirstRunLoginPrompt(enable: Bool) {

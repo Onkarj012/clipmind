@@ -1,33 +1,68 @@
 import SwiftUI
 
+enum LibraryTab: Hashable {
+    case clips
+    case settings
+}
+
 struct LibraryView: View {
     @EnvironmentObject private var appModel: AppModel
+    @Binding var selectedTab: LibraryTab
     @State private var selectedClipID: ClipboardItem.ID?
+    @State private var filterSelection: LibraryFilter?
 
     private var selectedClip: ClipboardItem? {
         guard let selectedClipID else { return nil }
         return appModel.libraryClips.first { $0.id == selectedClipID }
     }
 
+    private var showingSettings: Bool { selectedTab == .settings }
+
     var body: some View {
-        NavigationSplitView {
-            sidebar
-        } content: {
-            timeline
-        } detail: {
-            if let selectedClip {
-                ClipDetailView(item: selectedClip)
+        Group {
+            if showingSettings {
+                // Settings is a focused two-column layout — no detail column.
+                NavigationSplitView {
+                    sidebar
+                } detail: {
+                    SettingsForm(settings: appModel.settings)
+                        .environmentObject(appModel)
+                }
+                .navigationSplitViewStyle(.balanced)
             } else {
-                ContentUnavailableView(
-                    "Select a Clip",
-                    systemImage: "sidebar.right",
-                    description: Text("Choose a clip from the timeline to see details and actions.")
-                )
+                NavigationSplitView {
+                    sidebar
+                } content: {
+                    timeline
+                } detail: {
+                    if let selectedClip {
+                        ClipDetailView(item: selectedClip)
+                    } else {
+                        ContentUnavailableView(
+                            "Select a Clip",
+                            systemImage: "sidebar.right",
+                            description: Text("Choose a clip from the timeline to see details and actions.")
+                        )
+                    }
+                }
+                .navigationSplitViewStyle(.balanced)
             }
         }
-        .navigationSplitViewStyle(.balanced)
         .onAppear {
+            filterSelection = appModel.libraryFilter
             appModel.refreshLibraryClips()
+        }
+        .onChange(of: filterSelection) { _, newValue in
+            guard let newValue else { return }
+            if selectedTab != .clips { selectedTab = .clips }
+            if appModel.libraryFilter != newValue {
+                appModel.libraryFilter = newValue
+            }
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue == .clips {
+                filterSelection = appModel.libraryFilter
+            }
         }
         .onChange(of: appModel.libraryFilter) { _, _ in
             selectedClipID = nil
@@ -49,16 +84,47 @@ struct LibraryView: View {
     }
 
     private var sidebar: some View {
-        List(selection: $appModel.libraryFilter) {
-            Section("Filters") {
+        List(selection: $filterSelection) {
+            Section("Library") {
                 ForEach(LibraryFilter.allCases) { filter in
                     Label(filter.title, systemImage: filter.systemImage)
                         .tag(filter)
                 }
             }
         }
-        .navigationTitle("Library")
-        .navigationSplitViewColumnWidth(min: 160, ideal: 180, max: 220)
+        .navigationTitle("ClipMind")
+        .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+        .safeAreaInset(edge: .bottom) {
+            settingsButton
+        }
+    }
+
+    private var settingsButton: some View {
+        VStack(spacing: 0) {
+            Divider()
+            Button {
+                if selectedTab != .settings {
+                    selectedTab = .settings
+                    filterSelection = nil
+                }
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                showingSettings
+                    ? Color.accentColor.opacity(0.18)
+                    : Color.clear,
+                in: RoundedRectangle(cornerRadius: 6)
+            )
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+        }
+        .background(.bar)
     }
 
     private var timeline: some View {
@@ -81,9 +147,9 @@ struct LibraryView: View {
             }
         }
         .navigationTitle(appModel.libraryFilter.title)
-        .searchable(text: $appModel.librarySearchQuery, prompt: "Search in \(appModel.libraryFilter.title.lowercased())")
+        .searchable(text: $appModel.librarySearchQuery, placement: .toolbar, prompt: "Search in \(appModel.libraryFilter.title.lowercased())")
         .toolbar {
-            ToolbarItem(placement: .automatic) {
+            ToolbarItem(placement: .primaryAction) {
                 Button {
                     appModel.refreshLibraryClips()
                 } label: {
@@ -131,6 +197,6 @@ struct LibraryView: View {
 
 #Preview {
     let settings = ClipMindSettings()
-    LibraryView()
+    LibraryView(selectedTab: .constant(.clips))
         .environmentObject(AppModel(settings: settings))
 }

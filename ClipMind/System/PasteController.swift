@@ -109,6 +109,10 @@ enum PasteController {
         return .pasted
     }
 
+    static func postCommandV() {
+        simulateCommandV()
+    }
+
     private static func simulateCommandV() {
         let source = CGEventSource(stateID: .hidSystemState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)

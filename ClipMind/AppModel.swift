@@ -40,7 +40,8 @@ final class AppModel: ObservableObject {
 
     private let commandPalettePanel = FloatingPanelManager()
     private var paletteShortcutMonitor: Any?
-    private var openLibraryHandler: (() -> Void)?
+    private var openLibraryHandler: ((LibraryTab) -> Void)?
+    private var paletteTargetApplication: NSRunningApplication?
     private var cancellables = Set<AnyCancellable>()
     private var semanticSearchTask: Task<Void, Never>?
     private let semanticSettingsStore: SemanticSearchSettingsStore
@@ -157,7 +158,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func setOpenLibraryHandler(_ handler: @escaping () -> Void) {
+    func setOpenLibraryHandler(_ handler: @escaping (LibraryTab) -> Void) {
         openLibraryHandler = handler
     }
 
@@ -276,30 +277,42 @@ final class AppModel: ObservableObject {
         if commandPalettePanel.isVisible {
             hideCommandPalette()
         } else {
+            showCommandPalette(reset: true, targetApplication: NSWorkspace.shared.frontmostApplication)
+        }
+    }
+
+    private func showCommandPalette(reset: Bool, targetApplication: NSRunningApplication?) {
+        paletteTargetApplication = targetApplication
+        if reset {
             paletteQuery = ""
             paletteSelectedIndex = 0
-            paletteFocusToken = UUID()
-            refreshPaletteClips()
-            showAccessibilityBanner = false
+        }
+        paletteFocusToken = UUID()
+        refreshPaletteClips()
+        showAccessibilityBanner = false
 
-            commandPalettePanel.toggle(
-                content: CommandPaletteView().environmentObject(self),
-                size: CGSize(
-                    width: CommandPaletteMetrics.width,
-                    height: CommandPaletteMetrics.height
-                )
-            ) { [weak self] in
+        commandPalettePanel.show(
+            content: CommandPaletteView().environmentObject(self),
+            size: CGSize(
+                width: CommandPaletteMetrics.width,
+                height: CommandPaletteMetrics.height
+            ),
+            onPresented: { [weak self] in
+                self?.paletteFocusToken = UUID()
+            },
+            onClose: { [weak self] in
                 self?.removePaletteShortcutMonitor()
                 self?.showAccessibilityBanner = false
             }
-            installPaletteShortcutMonitor()
-        }
+        )
+        installPaletteShortcutMonitor()
     }
 
     func hideCommandPalette() {
         removePaletteShortcutMonitor()
         commandPalettePanel.hide()
         showAccessibilityBanner = false
+        paletteTargetApplication = nil
     }
 
     func movePaletteSelection(delta: Int) {
@@ -309,10 +322,14 @@ final class AppModel: ObservableObject {
 
     func pasteSelectedPaletteClip() {
         guard let item = selectedPaletteClip else { return }
-        if settings.keepPaletteOpenAfterPaste {
-            pasteClip(item, closePalette: nil)
+        if settings.pasteDirectlyFromPalette {
+            pastePaletteClip(item, keepPaletteOpen: settings.keepPaletteOpenAfterPaste)
         } else {
-            pasteClip(item, closePalette: { self.hideCommandPalette() })
+            // Copy-only mode: set the clip as the latest clipboard entry for manual paste later.
+            copyClip(item)
+            if !settings.keepPaletteOpenAfterPaste {
+                hideCommandPalette()
+            }
         }
     }
 
@@ -411,8 +428,23 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func openLibrary() {
-        openLibraryHandler?()
+    func openLibrary(tab: LibraryTab = .clips) {
+        openLibraryHandler?(tab)
+    }
+
+    func libraryWillOpen() {
+        NSApp.setActivationPolicy(.regular)
+    }
+
+    func libraryWindowDidOpen() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func libraryWindowDidClose() {
+        if !commandPalettePanel.isVisible {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 
     // MARK: - Private
@@ -519,20 +551,30 @@ final class AppModel: ObservableObject {
         paletteShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.commandPalettePanel.isVisible else { return event }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            guard flags.contains(.command) else { return event }
 
-            switch event.charactersIgnoringModifiers?.lowercased() {
-            case "c":
+            switch event.keyCode {
+            case 53:
+                self.hideCommandPalette()
+                return nil
+            case 36, 76:
+                self.pasteSelectedPaletteClip()
+                return nil
+            case 125:
+                self.movePaletteSelection(delta: 1)
+                return nil
+            case 126:
+                self.movePaletteSelection(delta: -1)
+                return nil
+            case 8 where flags.contains(.command):
                 self.copySelectedPaletteClip()
                 return nil
-            case "f":
+            case 3 where flags.contains(.command):
                 self.toggleFavoriteSelectedPaletteClip()
                 return nil
+            case 51 where flags.contains(.command):
+                self.deleteSelectedPaletteClip()
+                return nil
             default:
-                if event.keyCode == 51 {
-                    self.deleteSelectedPaletteClip()
-                    return nil
-                }
                 return event
             }
         }
@@ -542,6 +584,43 @@ final class AppModel: ObservableObject {
         if let paletteShortcutMonitor {
             NSEvent.removeMonitor(paletteShortcutMonitor)
             self.paletteShortcutMonitor = nil
+        }
+    }
+
+    private func pastePaletteClip(_ item: ClipboardItem, keepPaletteOpen: Bool) {
+        guard PasteController.copyToPasteboard(item, repository: repository) else { return }
+        do {
+            try repository.touchLastUsed(id: item.id)
+        } catch {
+            NSLog("ClipMind: failed to update last_used_at: \(error.localizedDescription)")
+        }
+
+        guard PasteController.isAccessibilityTrusted else {
+            PasteController.requestAccessibilityPrompt()
+            showAccessibilityBanner = true
+            showLibraryAccessibilityAlert = true
+            return
+        }
+
+        let targetApplication = paletteTargetApplication
+        let preservedQuery = paletteQuery
+        let preservedIndex = paletteSelectedIndex
+        hideCommandPalette()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self, targetApplication] in
+            targetApplication?.activate()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                PasteController.postCommandV()
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.refreshAll()
+                    if keepPaletteOpen {
+                        self.paletteQuery = preservedQuery
+                        self.paletteSelectedIndex = preservedIndex
+                        self.showCommandPalette(reset: false, targetApplication: targetApplication)
+                    }
+                }
+            }
         }
     }
 }

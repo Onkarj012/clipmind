@@ -1,13 +1,15 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct MenuBarView: View {
     @EnvironmentObject private var appModel: AppModel
     @Environment(\.openWindow) private var openWindow
+    @Binding var selectedLibraryTab: LibraryTab
 
     var body: some View {
         Group {
             Button("Open Library") {
-                openLibrary()
+                openLibrary(tab: .clips)
             }
             Button(appModel.isTrackingPaused ? "Resume Tracking" : "Pause Tracking") {
                 appModel.toggleTrackingPause()
@@ -22,9 +24,9 @@ struct MenuBarView: View {
             Text("Shortcuts")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("⌘⇧V  Command palette")
+            Text("\(shortcutLabel(for: .commandPalette))  Command palette")
                 .font(.caption)
-            Text("⌘⇧L  Library window")
+            Text("\(shortcutLabel(for: .openLibrary))  Library window")
                 .font(.caption)
 
             Divider()
@@ -39,12 +41,17 @@ struct MenuBarView: View {
     }
 
     private func openSettings() {
-        openWindow(id: "settings")
+        openLibrary(tab: .settings)
+    }
+
+    private func openLibrary(tab: LibraryTab = .clips) {
+        selectedLibraryTab = tab
+        appModel.libraryWillOpen()
+        openWindow(id: "library")
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func openLibrary() {
-        openWindow(id: "library")
-        NSApp.activate(ignoringOtherApps: true)
+    private func shortcutLabel(for name: KeyboardShortcuts.Name) -> String {
+        KeyboardShortcuts.getShortcut(for: name).map { "\($0)" } ?? "Not set"
     }
 }

@@ -98,8 +98,10 @@ struct ClipRowView: View {
                     }
 
                     if let sourceApp = item.sourceApp, !sourceApp.isEmpty {
-                        Label(sourceApp, systemImage: "app")
-                            .labelStyle(.titleAndIcon)
+                        HStack(spacing: 4) {
+                            AppIconView(bundleId: item.sourceBundleId, size: 14)
+                            Text(sourceApp)
+                        }
                     }
 
                     Text(relativeTimestamp(for: item))

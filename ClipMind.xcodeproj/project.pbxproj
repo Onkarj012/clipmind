@@ -55,6 +55,8 @@
 		B3B15983F2E0D9388BE3845E /* OllamaChatProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22C3FA50E3025109C19E457 /* OllamaChatProvider.swift */; };
 		B4B9E6759088A1BA152AE4F4 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = BBE9D8E502F23DE4141AE763 /* LaunchAtLogin */; };
 		BDF1167C022DCBE34E18726C /* FileIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607375DDB4BFDBA262207881 /* FileIconView.swift */; };
+		AAAA000000000000000000A1 /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA000000000000000000B1 /* AppIconView.swift */; };
+		BBBB000000000000000000A2 /* ShortcutKeycapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBB000000000000000000B2 /* ShortcutKeycapView.swift */; };
 		C1238BBA6BDB7AA119D9C7D6 /* FirstRunLoginPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436983D480A2366343E16C28 /* FirstRunLoginPrompt.swift */; };
 		C2F73E66366C6E551882422D /* EmbeddingBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD730FEBA9F7344EF88A085A /* EmbeddingBackend.swift */; };
 		C6B9BB25B0DA40F1F5342D72 /* ClipDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E21E34AE64C705F82500DEB /* ClipDetailView.swift */; };
@@ -116,6 +118,8 @@
 		5BD1381395184F1BCC925F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5C038E49ED5FF5E208151139 /* AIActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIActionTests.swift; sourceTree = "<group>"; };
 		607375DDB4BFDBA262207881 /* FileIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIconView.swift; sourceTree = "<group>"; };
+		AAAA000000000000000000B1 /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
+		BBBB000000000000000000B2 /* ShortcutKeycapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutKeycapView.swift; sourceTree = "<group>"; };
 		62A256A37DC888375197026D /* AssetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetStore.swift; sourceTree = "<group>"; };
 		64C6E148DD6E252E102268C3 /* PasteboardImageExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardImageExtractor.swift; sourceTree = "<group>"; };
 		6A1305EFB921622E86F05852 /* PasteboardTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardTextExtractor.swift; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				8E81B39AEAB4D3D4894AC0B7 /* AIActionPreviewSheet.swift */,
+				AAAA000000000000000000B1 /* AppIconView.swift */,
 				9E21E34AE64C705F82500DEB /* ClipDetailView.swift */,
 				2F91E56D51C52ED9DA35F719 /* ClipRowView.swift */,
 				39A689E766C2EF45E8BFC0E1 /* CommandPaletteView.swift */,
@@ -196,6 +201,7 @@
 				28687E670AC626B5073A70A9 /* MenuBarView.swift */,
 				6E2848243B22AE9C2B9AD6F9 /* PaletteSearchField.swift */,
 				DA5FB8AE25FB382DDA13328B /* SettingsView.swift */,
+				BBBB000000000000000000B2 /* ShortcutKeycapView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -442,6 +448,8 @@
 				24C3FA937C96A8F2AA3E1818 /* EmbeddingGenerator.swift in Sources */,
 				90A566F5CACE4822E2328CFF /* EmbeddingIndexer.swift in Sources */,
 				BDF1167C022DCBE34E18726C /* FileIconView.swift in Sources */,
+				AAAA000000000000000000A1 /* AppIconView.swift in Sources */,
+				BBBB000000000000000000A2 /* ShortcutKeycapView.swift in Sources */,
 				C1238BBA6BDB7AA119D9C7D6 /* FirstRunLoginPrompt.swift in Sources */,
 				56922E580B0511366768CFD6 /* FloatingPanelManager.swift in Sources */,
 				09D2E7FAF246E438821A26EE /* FlowLayout.swift in Sources */,

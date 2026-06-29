@@ -15,6 +15,7 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
     func show<Content: View>(
         content: Content,
         size: CGSize,
+        onPresented: @escaping () -> Void = {},
         onClose: @escaping () -> Void
     ) {
         if let panel, panel.isVisible {
@@ -27,7 +28,7 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
         controller.view.frame = CGRect(origin: .zero, size: size)
         hostingController = controller
 
-        let panel = NSPanel(
+        let panel = FocusableNonActivatingPanel(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
             backing: .buffered,
@@ -48,9 +49,11 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
 
         positionCentered(panel: panel, size: size)
         panel.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
         self.panel = panel
         installEscapeMonitor(for: panel)
+        DispatchQueue.main.async {
+            onPresented()
+        }
     }
 
     func hide() {
@@ -65,12 +68,13 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
     func toggle<Content: View>(
         content: Content,
         size: CGSize,
+        onPresented: @escaping () -> Void = {},
         onClose: @escaping () -> Void
     ) {
         if isVisible {
             hide()
         } else {
-            show(content: content, size: size, onClose: onClose)
+            show(content: content, size: size, onPresented: onPresented, onClose: onClose)
         }
     }
 
@@ -112,4 +116,9 @@ final class FloatingPanelManager: NSObject, NSWindowDelegate {
         )
         panel.setFrameOrigin(origin)
     }
+}
+
+private final class FocusableNonActivatingPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
 }

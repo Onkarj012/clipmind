@@ -60,6 +60,10 @@ final class ClipboardWatcher: ObservableObject {
             return
         }
 
+        if CaptureDenylist.shouldIgnore(pasteboardTypes: pasteboard.types) {
+            return
+        }
+
         if let extractedImage = PasteboardImageExtractor.extract(from: pasteboard) {
             do {
                 let retention = retentionSettingsProvider?() ?? RetentionSettings.defaults

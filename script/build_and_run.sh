@@ -17,7 +17,7 @@ esac
 
 build() {
   xcodebuild \
-    -project "$ROOT_DIR/ClipMind.xcodeproj" \
+    -project "$ROOT_DIR/apple/ClipMind.xcodeproj" \
     -scheme "$APP_NAME" \
     -configuration Debug \
     -destination 'platform=macOS' \

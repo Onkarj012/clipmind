@@ -58,12 +58,12 @@ jobs:
 
       - name: Run unit tests
         run: >-
-          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          xcodebuild -project apple/ClipMind.xcodeproj -scheme ClipMind
           -configuration Debug -destination 'platform=macOS,arch=arm64' test
 
       - name: Build unsigned release app
         run: >-
-          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          xcodebuild -project apple/ClipMind.xcodeproj -scheme ClipMind
           -configuration Release -destination 'platform=macOS,arch=arm64'
           -derivedDataPath build/DerivedData
           CODE_SIGNING_ALLOWED=NO build
@@ -94,7 +94,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           tag="v${VERSION}"
-          git add ClipMind/Info.plist
+          git add apple/ClipMind/Info.plist
           git commit -m "chore(release): ${tag}"
           git tag -a "$tag" -m "ClipMind ${tag} (${BUILD})"
 

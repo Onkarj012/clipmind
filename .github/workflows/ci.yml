@@ -24,10 +24,10 @@ jobs:
           persist-credentials: false
       - name: Run unit tests
         run: >-
-          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          xcodebuild -project apple/ClipMind.xcodeproj -scheme ClipMind
           -configuration Debug -destination 'platform=macOS,arch=arm64' test
       - name: Build unsigned release artifact
         run: >-
-          xcodebuild -project ClipMind.xcodeproj -scheme ClipMind
+          xcodebuild -project apple/ClipMind.xcodeproj -scheme ClipMind
           -configuration Release -destination 'platform=macOS,arch=arm64'
           CODE_SIGNING_ALLOWED=NO build

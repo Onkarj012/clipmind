@@ -42,7 +42,7 @@ def next_build(current: object) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bump ClipMind Info.plist version.")
-    parser.add_argument("--plist", default="ClipMind/Info.plist", help="Path to Info.plist")
+    parser.add_argument("--plist", default="apple/ClipMind/Info.plist", help="Path to Info.plist")
     parser.add_argument("--bump", choices=["major", "minor", "patch"], default="patch")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
